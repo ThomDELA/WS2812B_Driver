@@ -120,7 +120,7 @@ void ledMatrix::updateLeds(uint8_t volatile *tab, uint8_t indexByte){
 	"nop"					"\n\t"								//1		(10)
 	"dec %[indexBit]"		"\n\t"	//decremente compteurBit	//1		(11)
 	"CBI %[port],7"			"\n\t"								//2		(13)
-	"BRNE nextBit"			"\n\t"								//1-2	(15)
+	"BRNE nextBit"			"\n\t"	//Branche si indexBit<8		//1-2	(15)
 	"nop"			"\n\t"										//1		(15)
 	
 	"loadByte:"
