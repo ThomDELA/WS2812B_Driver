@@ -26,7 +26,9 @@ public:
 	ledMatrix(uint8_t w, uint8_t h, uint16_t p, uint8_t *tab);
 	~ledMatrix();
 
+	// Send data to the Leds
 	void show();
+	// Update the data table
 	void updateTab(uint8_t *newTab);
 	void mooveLeft();
 	void mooveLeftSmooth();
