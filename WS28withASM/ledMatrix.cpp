@@ -1,4 +1,3 @@
-
 #include "ledMatrix.h"
 
 // default constructor
