@@ -5,6 +5,6 @@ It mostly uses AVR assembly to get the right timing, which is the critical part 
 
 Use atmel studio to open project. I use avrdude from adruino toolkit to upload into micro.
 
-Usage is demonstrated in main.cpp .
+Usage is demonstrated in main.cpp . It's basic.
 
 You should only reuse ledMatrix.* sources.
