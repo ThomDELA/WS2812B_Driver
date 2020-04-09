@@ -3,7 +3,7 @@ It will only work on some ATMEGA chips.
 I tested only the ATMEGA328p.
 It mostly uses AVR assembly to get the right timing, which is the critical part  of communicating with thoose leds.
 
-Use atmel studio to open project. I use avrdude from adruino toolkit to upload into micro.
+Use atmel studio to open project. I use avrdude from adruino toolkit to upload into micro, simplest way is to copy arduino command line.
 
 Usage is demonstrated in main.cpp . It's basic.
 Try it.
