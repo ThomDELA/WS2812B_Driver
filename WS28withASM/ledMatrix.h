@@ -9,8 +9,6 @@
 class ledMatrix
 {
 //variables
-public:
-protected:
 private:
 	uint8_t width;
 	uint8_t heigth;
@@ -34,7 +32,6 @@ public:
 	void mooveLeftSmooth();
 	void mooveRigth();
 	
-protected:
 private:
 	void updateLeds(uint8_t volatile *tab, uint8_t indexByte);
 	ledMatrix( const ledMatrix &c );
