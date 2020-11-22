@@ -75,41 +75,47 @@ void ledMatrix::mooveLeftSmooth(){
 
 void ledMatrix::updateLeds(uint8_t volatile *tab, uint8_t indexByte){
 	// sent as R G B
-	//volatile uint8_t port = PORTB; // Have to find a way to put it in the inline sam
-	//volatile uint8_t pin = 0;		 // SBI/CBI only take constant as second operand
-	cli();
+	//volatile uint8_t port = PORTB; // Have to find a way to put it in the inline asm
+	//volatile uint8_t pin = 0;      // SBI/CBI only take constant as second operand so it's not trivial to choose the pin at runtime
+	
+	cli(); // Prevent any interruption
+	
 	uint8_t indexBit = 8;
 
+	// Comments on the right of each asm line are :
+	//[Nb clk cycles for this line] - [Total number of clock cycle since first bit sent, after the instruction]
+	
 	asm volatile(
-	"ld __tmp_reg__,%a[tab]+" "\n\t" // load first byte in r0	//2
+	"ld __tmp_reg__,%a[tab]+" "\n\t" // load first byte in r0						//2
 	
 	"nextBit:"
 	"nop"					"\n\t"								//1		(16)
 	"nop"					"\n\t"								//1		(17)
 	"nop"					"\n\t"								//1		(18)
 	"nop"					"\n\t"								//1		(19)
-	"nop"					"\n\t"								//1		(20)	//(Nb clk cycles) (Data time) (total clk cycles since start of the bit sending)
-
+	"nop"					"\n\t"								//1		(20)	
+	// Start of the loop
 	"nextBit0:"
-	"SBI %[port],7"			"\n\t"	// Set the pin HIGH			//1-2(depends on ?) (1)
-	"LSL __tmp_reg__"		"\n\t"	//load High bit in C flag	//1 (actually 1) (2)
-	"BRCS one"				"\n\t"	// Si Carry set then branch to one //1-2
+	"SBI %[port],7"			"\n\t"	// Set the pin HIGH						//1-2		(1) (This takes 1 or 2 cycles, not clear why. Let say it's really one)
+	"LSL __tmp_reg__"		"\n\t"	// load High bit in C flag					//1 		(2)
+	"BRCS one"			"\n\t"	// If Carry set then branch to one 				//1-2		(3 or 4 if branch)
+		
 	// Else sent zero without branch
-	// ZERO CODE - start at 3 clock cycle high (need 6)					(3)
+	// ZERO CODE - start at 3 clock cycle high (need 6 to send a zero))							(3)
 	"nop"					"\n\t"								//1		(4)
 	"nop"					"\n\t"								//1		(5)
 	"nop"					"\n\t"								//1		(6)
-	"CBI %[port],7"			"\n\t"	//clear pin					//2(really 2)		(7)
+	"CBI %[port],7"			"\n\t"	//clear pin							//2(really 2)   (7)
 	"nop"					"\n\t"								//1		(8)
 	"nop"					"\n\t"								//1		(9)
 	"nop"					"\n\t"								//2		(10)
 	"nop"					"\n\t"								//1		(11)
-	"dec %[indexBit]"		"\t\n"	//decrement compteurBit	    //1		(12)
-	"BRNE nextBit"			"\n\t"	//nextbit or nextByte		//1-2	(14 si branch)
-	"RJMP loadByte"			"\n\t"								//2		(15)
+	"dec %[indexBit]"		"\t\n"	//decrement compteurBit	   					//1		(12)
+	"BRNE nextBit"			"\n\t"	//nextbit or nextByte						//1-2		(14 si branch)
+	"RJMP loadByte"			"\n\t"									//2		(15)
 	
 
-	// ONE code after branch - start at 4 clock high (need 12)			(4)
+	// ONE code after branch - start at 4 clock high (need 12)								(4)
 	"one:"
 	"nop"					"\n\t"								//1		(5)
 	"nop"					"\n\t"								//1		(6)
@@ -117,16 +123,16 @@ void ledMatrix::updateLeds(uint8_t volatile *tab, uint8_t indexByte){
 	"nop"					"\n\t"								//1		(8)
 	"nop"					"\n\t"								//1		(9)
 	"nop"					"\n\t"								//1		(10)
-	"dec %[indexBit]"		"\n\t"	//decremente compteurBit	//1		(11)
-	"CBI %[port],7"			"\n\t"								//2		(13)
-	"BRNE nextBit"			"\n\t"	//Branche si indexBit<8		//1-2	(15)
-	"nop"			"\n\t"										//1		(15)
+	"dec %[indexBit]"		"\n\t"	//decremente compteurBit					//1		(11)
+	"CBI %[port],7"			"\n\t"									//2		(13)
+	"BRNE nextBit"			"\n\t"	//Branch if indexBit<8						//1-2		(15)
+	"nop"				"\n\t"									//1		(15)
 	
 	"loadByte:"
-	"ld __tmp_reg__,%a[tab]+" "\n\t"	// load byte in r0		//2		(17)
-	"ldi %[indexBit],8"		  "\n\t"	// indexBit = 7			//1		(18)
-	"dec %[indexByte]"		  "\n\t"	// indexByte--			//1		(19)
-	"BRNE nextBit0"						//Branch if indexByte!=0 //2		(21)
+	"ld __tmp_reg__,%a[tab]+" "\n\t"	// load byte in r0						//2		(17)
+	"ldi %[indexBit],8"		  "\n\t"	// indexBit = 7						//1		(18)
+	"dec %[indexByte]"		  "\n\t"	// indexByte--						//1		(19)
+	"BRNE nextBit0"					//Branch if indexByte!=0	 			//2		(21)
 	://output
 	://input :
 	[tab] "e" (tab),
@@ -135,5 +141,6 @@ void ledMatrix::updateLeds(uint8_t volatile *tab, uint8_t indexByte){
 	[indexByte] "d" (indexByte)
 	://clobbered (none as we use temp_reg for data)
 	);
-	sei();
+	
+	sei(); // enable interruptions
 }
