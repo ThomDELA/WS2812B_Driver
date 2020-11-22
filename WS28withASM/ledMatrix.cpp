@@ -73,8 +73,11 @@ void ledMatrix::mooveLeftSmooth(){
 	}
 }
 
+// Main part of the code. ASM is used in order to achieve the best timing to communicate each bit. A bit is sent in 21 clock cycles. A one is sent by keeping the signal HIGH for 
+// 12 cyles (12/(16MHZ) seconds), then LOW for 9 cycles. A zeros is sent by keeping the signal HIGH for 6 cycles and LOW for the rest. An error of some clock cycles is allowed.
+// The value indicated and taken for the code are in the middle of the error margin.
 void ledMatrix::updateLeds(uint8_t volatile *tab, uint8_t indexByte){
-	// sent as R G B
+	//sent as R G B
 	//volatile uint8_t port = PORTB; // Have to find a way to put it in the inline asm
 	//volatile uint8_t pin = 0;      // SBI/CBI only take constant as second operand so it's not trivial to choose the pin at runtime
 	
@@ -83,18 +86,19 @@ void ledMatrix::updateLeds(uint8_t volatile *tab, uint8_t indexByte){
 	uint8_t indexBit = 8;
 
 	// Comments on the right of each asm line are :
-	//[Nb clk cycles for this line] - [Total number of clock cycle since first bit sent, after the instruction]
+	//[Nb clk cycles for this instruction] - [Total number of clock cycle (after the instruction) since the pin was set to HIGH for this bit]
 	
 	asm volatile(
 	"ld __tmp_reg__,%a[tab]+" "\n\t" // load first byte in r0						//2
 	
+	// 5 nops when no  new byte need to be loaded.
 	"nextBit:"
 	"nop"					"\n\t"								//1		(16)
 	"nop"					"\n\t"								//1		(17)
 	"nop"					"\n\t"								//1		(18)
 	"nop"					"\n\t"								//1		(19)
 	"nop"					"\n\t"								//1		(20)	
-	// Start of the loop
+
 	"nextBit0:"
 	"SBI %[port],7"			"\n\t"	// Set the pin HIGH						//1-2		(1) (This takes 1 or 2 cycles, not clear why. Let say it's really one)
 	"LSL __tmp_reg__"		"\n\t"	// load High bit in C flag					//1 		(2)
@@ -102,19 +106,18 @@ void ledMatrix::updateLeds(uint8_t volatile *tab, uint8_t indexByte){
 		
 	// Else sent zero without branch
 	// ZERO CODE - start at 3 clock cycle high (need 6 to send a zero))							(3)
-	"nop"					"\n\t"								//1		(4)
-	"nop"					"\n\t"								//1		(5)
-	"nop"					"\n\t"								//1		(6)
-	"CBI %[port],7"			"\n\t"	//clear pin							//2(really 2)   (7)
-	"nop"					"\n\t"								//1		(8)
-	"nop"					"\n\t"								//1		(9)
-	"nop"					"\n\t"								//2		(10)
-	"nop"					"\n\t"								//1		(11)
+	"nop"				"\n\t"									//1		(4)
+	"nop"				"\n\t"									//1		(5)
+	"nop"				"\n\t"									//1		(6)
+	"CBI %[port],7"			"\n\t"	//Set pin to LOW						//2(really 2?)  (7)
+	"nop"				"\n\t"									//1		(8)
+	"nop"				"\n\t"									//1		(9)
+	"nop"				"\n\t"									//2		(10)
+	"nop"				"\n\t"									//1		(11)
 	"dec %[indexBit]"		"\t\n"	//decrement compteurBit	   					//1		(12)
 	"BRNE nextBit"			"\n\t"	//nextbit or nextByte						//1-2		(14 si branch)
 	"RJMP loadByte"			"\n\t"									//2		(15)
 	
-
 	// ONE code after branch - start at 4 clock high (need 12)								(4)
 	"one:"
 	"nop"					"\n\t"								//1		(5)
