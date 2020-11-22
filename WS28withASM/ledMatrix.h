@@ -8,15 +8,6 @@
 
 class ledMatrix
 {
-//variables
-private:
-	uint8_t width;
-	uint8_t heigth;
-	uint16_t nPixels;
-	uint16_t pin;
-	uint8_t *RGB;
-	
-//functions
 public:
 	ledMatrix();
 	ledMatrix(uint16_t n, uint16_t p);
@@ -31,12 +22,18 @@ public:
 	void mooveLeft();
 	void mooveLeftSmooth();
 	void mooveRigth();
-	
+
 private:
+	uint8_t width;
+	uint8_t heigth;
+	uint16_t nPixels;
+	uint16_t pin;
+	uint8_t *RGB;
+	
 	void updateLeds(uint8_t volatile *tab, uint8_t indexByte);
 	ledMatrix( const ledMatrix &c );
 	ledMatrix& operator=( const ledMatrix &c );
-
+	
 }; //ledMatrix
 
 #endif //__LEDMATRIX_H__
