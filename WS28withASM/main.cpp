@@ -37,23 +37,23 @@
 		z,z,z,z,a,z,z,z
 	};
 	uint8_t tab[] = {
-		F,z,z,z,b,z,z,z,
+		F,z,z,b,b,b,z,z,
 		z,z,z,b,z,b,z,z,
-		z,z,z,b,b,b,z,z,
+		b,b,b,b,b,b,b,b,
+		z,z,z,b,z,b,z,z,
+		b,b,b,b,b,b,b,b,
 		z,z,z,b,z,b,z,z,
 		z,z,z,b,z,b,z,z,
-		z,z,z,b,z,b,z,z,
-		z,z,z,b,z,b,z,z,
-		z,z,b,b,b,b,b,F
+		b,b,b,b,b,b,b,F
 	};
 	uint8_t tab2[] = {
-		F,z,z,z,b,z,z,z,
+		F,b,b,b,b,b,b,b,
 		z,z,z,b,z,b,z,z,
 		z,z,z,b,b,b,z,z,
 		z,z,z,b,z,b,z,z,
 		z,z,z,b,z,b,z,z,
 		z,z,z,b,z,b,z,z,
-		z,z,b,b,b,b,b,z,
+		b,b,b,b,b,b,b,b,
 		z,z,z,z,z,z,z,F
 	};
 	uint8_t tab3[] = {
